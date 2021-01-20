@@ -5,14 +5,19 @@ import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
 
-class BridgeCrossing
+public class BridgeCrossing
 {
-  // Nested Classes
-  class Node
+  /// NESTED CLASSES
+  // A class that represents any given state of the given bridge crossing problem
+  private class Node
   {
+    /// ATTRIBUTES
     private Integer[] left;
-    boolean even;
+    private boolean even;
 
+
+    /// CONSTRUCTORS
+    // Defualt constructor - creates invalid instance of the bridge problem
     public Node() {
         ArrayList<Integer> temp = new ArrayList<Integer>();
         for (Integer i = 0; i < BridgeCrossing.Length; ++i)
@@ -22,7 +27,9 @@ class BridgeCrossing
         left = new Integer[temp.size()];
         left = temp.toArray(left);
         even = false;
-      }
+    }
+
+    // A "copy" constructor 
     public Node(Integer[] l, boolean e) { 
       ArrayList<Integer> temp = new ArrayList<Integer>();
       for (Integer i = 0; i < BridgeCrossing.Length; ++i)
@@ -34,6 +41,7 @@ class BridgeCrossing
       even = e;
     }
 
+    // A constructor for starting or final states
     public Node(Integer a, boolean e) { 
       ArrayList<Integer> temp = new ArrayList<Integer>();
       for (Integer i = 0; i < BridgeCrossing.Length; ++i)
@@ -45,6 +53,7 @@ class BridgeCrossing
       even = e;
     }
     
+    // A constructor to handle transitioning forward across the bridge
     public Node(Integer[] side, Integer p1, Integer p2)
     {
       even = true;
@@ -53,6 +62,7 @@ class BridgeCrossing
       left[p2] = 0;
     }
 
+    // A constructor to handle transitioning back across the bridge
     public Node(Integer[] side, Integer p1)
     {
       even = false;
@@ -72,6 +82,9 @@ class BridgeCrossing
       left[p1] = 1;
     }
 
+    /// METHODS
+    /// GETTERS
+    // Returns the left hand side of this instance of the bridge crossing problem
     public Integer[] Left() { 
       ArrayList<Integer> temp = new ArrayList<Integer>();
       for (Integer i = 0; i < BridgeCrossing.Length; ++i)
@@ -82,6 +95,7 @@ class BridgeCrossing
       return temp.toArray(t);
     }
 
+    // Returns the right hand side of this instance of the bridge crossing problem
     public Integer[] Right() { 
       ArrayList<Integer> temp = new ArrayList<Integer>();
       for (Integer i = 0; i < BridgeCrossing.Length; ++i)
@@ -95,6 +109,17 @@ class BridgeCrossing
       return temp.toArray(t);
     }
 
+    // Returns whether this node is a forward or backwards transition across the bridge
+    private String IsEven()
+    {
+      if(even)
+        return "Even";
+      else
+        return "Odd";
+    }
+
+    /// OVERRIDES
+    // override for the equals operator
     public boolean equals (Object other)  { 
       if (null == other) return false;
       if (! (other instanceof Node)) return false;
@@ -106,19 +131,14 @@ class BridgeCrossing
       return true;
     }
 
-    private String IsEven()
-    {
-      if(even)
-        return "Even";
-      else
-        return "Odd";
-    }
-
+    // overrides the hashcode operator
     public int hashCode()
     {
       return print().hashCode() + IsEven().hashCode();
     }
 
+    /// DEBUG
+    // returns a string representation of this state of the bridge crossing problem
     public String print() {
       String s = "";
       Integer[] r = Right();
@@ -134,6 +154,7 @@ class BridgeCrossing
       return s;
     }
 
+    // Returns a deep copy of this node
     public Node copy()
     {
       return new Node(Left(), even);
@@ -141,42 +162,79 @@ class BridgeCrossing
 
   }
 
-  class Stats
+  // A wrapper class to relate a given node and it's current time and previous node in a hashmap of Node : Stat
+  private class Stat
   {
-    Stats() {Dist = -1; Prev = new Node(); }
-    Stats(Integer d, Node n) {Dist = d; Prev = n.copy(); }
-    public Integer Dist;
+    /// CONSTRUCTORS
+    // Defualt constructor
+    Stat() {Time = -1; Prev = new Node(); }
+
+    // Full body constructor
+    Stat(Integer d, Node n) {Time = d; Prev = n.copy(); }
+
+    /// ATTRIBUTES
+    // The time the paired Node (via the hasmap this is a value of) has taken to get to
+    public Integer Time;
+
+    // The previous Node the pair Node (via the hasmap this is a value of) was reached from
     public Node Prev;
-    public void SetDist(Integer d) { Dist = d; }
+
+    /// METHODS
+    /// SETTERS
+    // Sets the Time attribute of this Stat
+    public void SetTime(Integer d) { Time = d; }
+
+    // Sets the Prev attribute of this Stat
     public void SetPrev(Node n) { Prev = n.copy(); }
   }
 
+  // A wrapper to help pass a Node and it's transition time from within a function
   class Package
   {
+    /// CONSTRUCTORS
+    // Defualt constructor
     Package() {n = new Node(); d = -1; }
+
+    // Full body constructor
     Package(Node node, Integer dist) {n = node.copy(); d = dist; }
+
+    /// ATTRIBUTES
+    // The Node this stores
     public Node n;
+
+    // The Time it took to transition to the paired node
     public Integer d;
   }
-  /// Attributes
+
+  /// ATTRIBUTES
+  // The list of all "people" - their indice represents their position in any node 
+  // and the value of that indice is their travel time
   protected Integer[] party;
+
+  // The amount of people in the party of this instance of the Bridge Crossing Problem
   public static Integer Length;
 
-  Hashtable<Node, Stats> crossing;
+  // A hashtable of all relevant states of the problem and their best calculated time | previous node
+  Hashtable<Node, Stat> crossing;
 
+  // The target start and end states of this Bridge Crossing Problem
   Node start, end;
 
-  /// Constructor
+  /// CONSTRUCTORS
+  // Constructs a bridge crossing problem from an Integer array of "people"  (i.e. a list of integers that represent the time it takes that index to cross the bridge)
   BridgeCrossing(Integer[] args) {
     BridgeCrossing.Length = args.length;
-    party = Arrays.copyOf(args, BridgeCrossing.Length); // The times to travel across the bridge relative to bitwise position
+    party = Arrays.copyOf(args, BridgeCrossing.Length); // The times to travel across the bridge
+                                                        // relative to bitwise position
     start = new Node(1, true); // everyone on the left (1,1,1,1) or 15
     end = new Node(0, true); // everyone on the right (0,0,0,0) or 0
 
-    crossing = new Hashtable<Node, Stats>(); // All the nodes and the best length of time to get there
-    crossing.put(start.copy(), new Stats(0, new Node())); // 
+    crossing = new Hashtable<Node, Stat>(); // All the nodes and the best length of time to get there
+    crossing.put(start.copy(), new Stat(0, new Node())); // 
   }
 
+  /// METHODS
+  // Returns an array of all nodes (and the time that transition takes) that can be reached from the given node and the direction across the bridge people are moving
   public ArrayList<Package> GetAllNextNodes(Node n, boolean forward)
   {
     Integer[] side;
@@ -226,6 +284,7 @@ class BridgeCrossing
     return NewNodes;
   }
 
+  /// Survey's a node according to Djikstra's algorithm and returns all discoved nodes
   public ArrayList<Node> Eat(Node n, Integer step)
   {
     ArrayList<Package> nextNodes = GetAllNextNodes(n.copy(), step%2==0);
@@ -233,34 +292,28 @@ class BridgeCrossing
     ArrayList<Node> nodes = new ArrayList<Node>();
     for (Package p : nextNodes)
     {
-      Stats CurrStat = crossing.get(n);
-      Integer newDist = p.d + CurrStat.Dist;
+      Stat CurrStat = crossing.get(n);
+      Integer newDist = p.d + CurrStat.Time;
 
-      //if (p.n.equals(new Node(0,0,0,0,true)) || p.n.equals(new Node(0,0,0,0,false)))
-      //  Main.print("End state time = " + newDist);
-
-      Stats s = crossing.get(p.n);
+      Stat s = crossing.get(p.n);
       if (s == null)
       {
-        crossing.put(p.n.copy(), new Stats(newDist, n.copy()));
+        crossing.put(p.n.copy(), new Stat(newDist, n.copy()));
       }
-      else if (s.Dist > newDist)
+      else if (s.Time > newDist)
       {
-        crossing.get(p.n).SetDist(newDist);
+        crossing.get(p.n).SetTime(newDist);
         crossing.get(p.n).SetPrev(n);
-        //Main.print("updated old node " + p.n.print() + " : prev = " + n.print() + ", time = " + newDist);
       }
-      else
-      {
-        //Main.print("slower node");
-      }
+
       nodes.add(p.n.copy());
     }
 
     return nodes;
   }
 
-  Integer CalcBestPath() {
+  /// Iterates from a starting position, finds all next positions given the rules of the BCP and uses Djikstra's algorithm to find the fastest time to travel to the end position of the node
+  Integer BruteForceBestTimeAndPathList() {
     if (BridgeCrossing.Length == 1)
     {
       Main.print("Best Time = " + party[0]);
@@ -292,7 +345,7 @@ class BridgeCrossing
       {
         if (!SurveyedNodes.contains(CurrNode))
         {
-          //Main.print("Surveying node " + CurrNode.print() + " | time = " + crossing.get(CurrNode.copy()).Dist);
+          //Main.print("Surveying node " + CurrNode.print() + " | time = " + crossing.get(CurrNode.copy()).Time);
           NextRound.addAll(Eat(CurrNode.copy(), step));
 
           SurveyedNodes.add(CurrNode.copy());
@@ -303,7 +356,7 @@ class BridgeCrossing
 
       step++;
     }
-    Integer BestTime = crossing.get(end.copy()).Dist;
+    Integer BestTime = crossing.get(end.copy()).Time;
     Main.print("Best Time = " + BestTime);
 
     Node n = end;
@@ -316,22 +369,25 @@ class BridgeCrossing
     Main.print("Finished");
     return BestTime;
   }
+
+  // A clean wrapper for the problem this lab was a solution for
+  // Includes comment of the given prompt
   public void q2() {
-    //Main.print("2. (15 points) Write a program that takes as input the walking times for each of four people and outputs the shortest time possible for them to all cross the bridge as well as the order in which they should cross. Assume the walking times are all integer values, but do not assume that the walking times are different for each person. The program should give the shortest time for any set of four walking times. (As discussed in class, the shortest solution in the original problem is 17 minutes. What happens if the walking times are one, four, six, and ten minutes?)");
-    Main.print("------------------------");
-    String vals = new String();
-    CalcBestPath();
-    
-    Main.print("------------------------");
-    Main.print("\n\n");
+    /*
+    2. (15 points) Write a program that takes as input the walking times for each of four people and outputs the shortest time possible for them to all cross the bridge as well as the order in which they should cross. Assume the walking times are all integer values, but do not assume that the walking times are different for each person. The program should give the shortest time for any set of four walking times. (As discussed in class, the shortest solution in the original problem is 17 minutes. What happens if the walking times are one, four, six, and ten minutes?)");
+    */
+    BruteForceBestTimeAndPathList();
   }
 }
 
+// The Main 
 class Main {
+  // A wrapper for the system print functionality
   public static void print(String s) {
     System.out.println(s);
   }
   
+  // The main
   public static void main(String[] args) {
     // ADJUST BRIDGE CROSSING VALUES HERE
     BridgeCrossing alg = new BridgeCrossing(new Integer[]{1,2,5,10});
